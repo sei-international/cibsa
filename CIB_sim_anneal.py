@@ -154,11 +154,6 @@ class CIB:
         ib_sel = ib[self._varndx_to_tablendx(v)]
         return(sum(ib_sel))
         
-    def accessible_scenarios(self, u):
-        '''Find all indices, accessible via fluctuations defined by the threshold'''
-        ib = self.impact_balance(u)
-        v = self._varndx_to_vector(u)
-        
     def succession_global_1(self, u):
         '''Do a one-step succession using global algorithm'''
         ib = self.impact_balance(u)
@@ -325,9 +320,9 @@ class CIB:
         
 if __name__ == "__main__":
     # Select the CIM (.scw) and consistent scenario (.sl) files
-    #x = CIB('CIB_global.scw', 'CIB_global.sl')
+    x = CIB('CIB_global.scw', 'CIB_global.sl')
     #x = CIB('SDG-CIB-HC.scw', 'SDG-CIB-HC.sl')
-    x = CIB('CIB_natl_regional.scw', 'nested_natl_regional_from_global.sl')
+    #x = CIB('CIB_natl_regional.scw', 'nested_natl_regional_from_global.sl')
     # Set the threshold (the same value to be applied to each descriptor)
     threshold = 1
     
