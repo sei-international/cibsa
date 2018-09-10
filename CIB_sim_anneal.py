@@ -273,31 +273,6 @@ class CIB:
                     r.append(self.inner_product(u,v))
                 M.append(r)
             return M
-        
-    #def old_merge(self):
-    #    '''Combine scenarios that become merged under simulated annealing'''
-    #    descendents = {}
-    #    for u in self.kernel:
-    #        accessible_sig = set()
-    #        accessible = self.sim_anneal(u)
-    #        for w_sig in map(self.signature, accessible):
-    #            accessible_sig.add(w_sig)
-    #        descendents[self.signature(u)] = accessible_sig
-    #    merge = []
-    #    for u_sig in descendents.keys():
-    #        bag = descendents[u_sig].copy()
-    #        bag.add(u_sig)
-    #        for ud_set_sig in descendents.values():
-    #            if u_sig in ud_set_sig:
-    #                bag = bag.union(ud_set_sig)
-    #        have_already = False
-    #        for i in merge:
-    #            if len(i.symmetric_difference(bag)) == 0:
-    #                have_already = True
-    #                break
-    #        if not have_already:
-    #            merge.append(bag)
-    #    return merge
                 
     def graph(self):
         '''Map elements of the kernel related to one another through fluctuations as a graph'''
