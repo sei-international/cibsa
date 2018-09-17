@@ -4,7 +4,7 @@ import re
 
 class CIB:
     '''Objects and methods for implementing cross-impact balance analysis'''
-    def __init__(self, scw_file, sl_file = None, kernel = None, mc_threshold = 10000):
+    def __init__(self, scw_file, sl_file = None, kernel = None, mc_threshold = 10000, acceptall = True, paccept = 1.0):
         ''' Read a ScenarioWizard definition (.scw) file, and, alternately a solutions (.sl) file
             Parse the .scw file, stepping through the sections using a finite state machine
             If present, call a method to parse the solutions file and populate the kernel
@@ -31,6 +31,10 @@ class CIB:
         d = -1
         # Initialize variant counter
         v = 0
+        # State whether to accept all values in simulated annealing
+        self.acceptall = acceptall
+        # Set acceptance probability (unless accepting all values)
+        self.paccept = paccept
         with open(scw_file, 'r') as f:
             for line in f:
                 # Skip blank lines and lines that are only whitespace
@@ -73,6 +77,24 @@ class CIB:
         else:
             self.kernel = find_consistent()
         
+    @property
+    def paccept(self):
+        '''Probability of acceptance in simulated annealing (unless acceptall = True)'''
+        return self._paccept
+    
+    @paccept.setter
+    def paccept(self, paccept):
+        self._paccept = paccept
+    
+    @property
+    def acceptall(self):
+        '''Boolean: True if accept all valid results in simulated annealing'''
+        return self._acceptall
+    
+    @acceptall.setter
+    def acceptall(self, acceptall):
+        self._acceptall = acceptall
+    
     @property
     def mc_threshold(self):
         '''The cutoff for switching to Monte Carlo mode'''
@@ -302,7 +324,7 @@ class CIB:
                 if xi + thr <= ui:
                     valid = False
                     break
-            if valid:
+            if valid and (self.acceptall or (np.random.random_sample() < self.paccept)):
                 nper,veqm = self.succession_global(v)
                 if ignore_cycles & (nper > 1):
                     continue
@@ -358,6 +380,8 @@ if __name__ == "__main__":
     # -----------------------------------------------------------------------
     # First, set the threshold (the same value to be applied to each descriptor)
     x.thresholds = [3] * x.ndesc
+    x.acceptall = True
+    x.paccept = 0.1
     print "Merged scenarios:"
     print x.merge()
     
