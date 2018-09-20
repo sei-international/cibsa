@@ -201,7 +201,7 @@ class CIB:
     
     def get_scenario_signatures(self, max = None, allow_dups = False):
         '''Generate a set of scenario signatures: either all or a random selection, no more than max'''
-        n = self.max_signature()
+        n = self.max_signature() + 1 # The list is zero-based
         all = range(n)
         if not max is None and n > max:
             return(np.random.choice(all, max, replace = not allow_dups))
@@ -228,7 +228,7 @@ class CIB:
     
     def max_signature(self):
         '''The maximum value for the signature'''
-        return(self.signature(self.nvariants))
+        return(self.signature([n - 1 for n in self.nvariants]))
     
     def succession_global(self, u):
         '''Follow a succession all the way to the end, with the possibility of a cycle (stop if there is a repeat)'''
@@ -288,13 +288,16 @@ class CIB:
                 kernel.append([x - y for x, y in zip(map(int, indices_re.match(line.lstrip()).group(1).split()), [1] * self.ndesc)])
         return kernel
                 
-    def sim_anneal(self, u, ignore_cycles = True):
+    def sim_anneal(self, u, ignore_cycles = True, return_weights = False):
         '''Implement a form of simulated annealing'''
         accessible = []
-        signatures = set()
-        signatures.add(self.signature(u))
+        weights = {}
+        u_sig = self.signature(u)
+        weights[u_sig] = 0
         uib = self.own_impact_balance(u)
-        for v_sig in self.get_scenario_signatures(self.mc_threshold):
+        # Get signatures for all possible scenarios or mc_threshold pseudo-random ones, whichever is smaller
+        sig_set = self.get_scenario_signatures(self.mc_threshold)
+        for v_sig in sig_set:
             v = self.inv_signature(v_sig)
             xib = self.cross_impact_balance(u, v)
             valid = True # They all have to satisfy the criterion, so start with true and reject if any fail the test
@@ -307,10 +310,17 @@ class CIB:
                 if ignore_cycles & (nper > 1):
                     continue
                 veqm_sig = self.signature(veqm)
-                if not veqm_sig in signatures:
-                    signatures.add(veqm_sig)
+                if veqm_sig in weights:
+                    weights[veqm_sig] += 1
+                else:
+                    weights[veqm_sig] = 1
                     accessible.append(veqm)
-        return accessible
+            else:
+                weights[u_sig] += 1
+        if return_weights:
+            return weights
+        else:
+            return accessible
     
     def inner_product_matrix(self):
             M = []
@@ -352,12 +362,19 @@ if __name__ == "__main__":
     print "Scenario kernel:"
     for u in x.kernel:
         print x.signature(u), ":", [i + 1 for i in u]
-
+        
     # -----------------------------------------------------------------------
-    # Find scenarios that become merged under simulated annealing
+    # Find scenarios accessible under simulated annealing, with weights
     # -----------------------------------------------------------------------
     # First, set the threshold (the same value to be applied to each descriptor)
     x.thresholds = [3] * x.ndesc
+    print "Simulated annealing results:"
+    for u in x.kernel:
+        print x.signature(u), ":", x.sim_anneal(u, return_weights = True)
+        
+    # -----------------------------------------------------------------------
+    # Find scenarios that become merged under simulated annealing
+    # -----------------------------------------------------------------------
     print "Merged scenarios:"
     print x.merge()
     
