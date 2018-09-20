@@ -293,7 +293,7 @@ class CIB:
         accessible = []
         weights = {}
         u_sig = self.signature(u)
-        weights[u_sig] = 0
+        weights['reject'] = 0
         uib = self.own_impact_balance(u)
         # Get signatures for all possible scenarios or mc_threshold pseudo-random ones, whichever is smaller
         sig_set = self.get_scenario_signatures(self.mc_threshold)
@@ -316,7 +316,7 @@ class CIB:
                     weights[veqm_sig] = 1
                     accessible.append(veqm)
             else:
-                weights[u_sig] += 1
+                weights['reject'] += 1
         if return_weights:
             return weights
         else:
